@@ -81,8 +81,8 @@ class AESImageCipher:
             new_url = self.path + self.image_name + "_e" + self.getMode() + "." + self.image_ext
 
             cipher = None
-            # En el modo ECB no se usa un IV, por lo que si no es de ese método no se agrega al new
-            
+
+            # En el modo ECB no se usa un IV, por lo que si no es de ese método no se agrega al new            
             if(self.getMode() != "ECB"):
                 cipher = AES.new(self.key, self.mode, iv=self.iv)
             else:
@@ -112,24 +112,32 @@ class AESImageCipher:
 
     # Similar al encrypt, pero utiliza la función cypher.decrypt.
     def decrypt(self):
+        # Si se detectó un archivo
         if(self.url != None and self.key != None):
             print("Decifrando...")
+            # Se utiliza la librería Pillow para abrir la imagen y la covierte a un arreglo usando numpy
             img = Image.open(self.url)
             self.image = np.array(img)
             self.image_size = img.size
 
+            # Crea el url para la nueva imagene
             new_url = self.path + self.image_name + "_d" + self.getMode() + "." + self.image_ext
             cipher = None
+            # En el modo ECB no se usa un IV, por lo que si no es de ese método no se agrega al new
             if(self.getMode() != "ECB"):
                 cipher = AES.new(self.key, self.mode, iv=self.iv)
             else:
                 cipher = AES.new(self.key, self.mode)
 
+            # Se decifra haciendo uso de la librería pycryptodome, tomando los bytes de la imagen como
+            # datos para hacer el proceso.
             aux = self.image.tobytes()
             pt = cipher.decrypt(
                 aux
             )
 
+            # Luego se vuelve a utilizar la librería numpy y Pillow para obtener los datos
+            # desde un buffer y se vuelve a crear una imagen. La cual se guarda con el url creado.
             img_data = np.frombuffer(pt)
 
             Image.frombuffer(
@@ -154,6 +162,9 @@ if __name__ == "__main__":
         cipher = AESImageCipher()
         # Obtenemos el path y agregamos toda la información al objeto
         imagePath = input("Ingrese el path de la imagen: ")
+        if(cipher.image_ext != 'bmp'):
+            print("Error en la extensión")
+            continue
         cipher.setImagePath(imagePath)
         cipher.setKey(key)
         cipher.setIv(iv)
